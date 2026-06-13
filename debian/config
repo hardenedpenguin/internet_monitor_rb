@@ -38,7 +38,8 @@ case "$1" in
 		fi
 
 		if [ "$DEBIAN_FRONTEND" = "noninteractive" ]; then
-			db_get internet-monitor/node-number NODE
+			db_get internet-monitor/node-number || true
+			NODE="$RET"
 			NODE=$(printf '%s' "$NODE" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 			if validate_node_number "$NODE" && ! is_unconfigured_node "$NODE"; then
 				db_set internet-monitor/node-number "$NODE"
@@ -55,7 +56,8 @@ case "$1" in
 				exit 1
 			fi
 
-			db_get internet-monitor/node-number NODE
+			db_get internet-monitor/node-number || true
+			NODE="$RET"
 			NODE=$(printf '%s' "$NODE" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 			if validate_node_number "$NODE"; then
 				db_set internet-monitor/node-number "$NODE"

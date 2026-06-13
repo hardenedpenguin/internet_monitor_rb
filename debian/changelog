@@ -1,3 +1,9 @@
+internet-monitor (1.0.4-1) unstable; urgency=medium
+
+  * Fix debconf db_get usage (result is in $RET); fixes postinst exit status 20
+
+ -- Jory A. Pratt, W5GLE <geekypenguin@gmail.com>  Thu, 12 Jun 2026 12:00:00 +0000
+
 internet-monitor (1.0.3-1) unstable; urgency=medium
 
   * Prompt for NODE_NUMBER during apt install via debconf; fail configure if unset

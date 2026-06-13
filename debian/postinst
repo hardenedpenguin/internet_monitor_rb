@@ -75,7 +75,8 @@ case "$1" in
 			ACTIVE_NODE="$CONFIGURED_NODE"
 			db_set internet-monitor/node-number "$CONFIGURED_NODE" || true
 		else
-			db_get internet-monitor/node-number NODE_NUMBER || NODE_NUMBER=""
+			db_get internet-monitor/node-number || true
+			NODE_NUMBER="$RET"
 			NODE_NUMBER=$(printf '%s' "$NODE_NUMBER" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
 			if ! validate_node_number "$NODE_NUMBER"; then
@@ -110,4 +111,5 @@ esac
 
 #DEBHELPER#
 
+db_stop || true
 exit 0
