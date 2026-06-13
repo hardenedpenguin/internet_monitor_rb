@@ -57,7 +57,7 @@ class Config
   private
 
   def set_defaults
-    @node_number = 12345
+    @node_number = nil
     @check_interval = 180
     @ping_hosts = %w[1.1.1.1 8.8.8.8 208.67.222.222]
     @sound_dir = '/usr/share/asterisk/sounds/custom'
@@ -85,6 +85,8 @@ class Config
   end
 
   def validate
+    raise "NODE_NUMBER is required in #{CONFIG_FILE}. Run: dpkg-reconfigure internet-monitor" if @node_number.nil?
+
     raise "Invalid NODE_NUMBER: #{@node_number}" unless @node_number.is_a?(Integer) && @node_number >= 1 && @node_number <= 999_999_999
 
     unless @check_interval.is_a?(Integer) && @check_interval >= 30 && @check_interval <= 3600

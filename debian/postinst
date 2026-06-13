@@ -6,52 +6,103 @@ set -e
 # Source debconf library
 . /usr/share/debconf/confmodule
 
+validate_node_number() {
+	local node="$1"
+	[[ -n "$node" ]] || return 1
+	[[ "$node" =~ ^[0-9]+$ ]] || return 1
+	(( node >= 1 && node <= 999999999 )) || return 1
+	return 0
+}
+
+is_unconfigured_node() {
+	local node="$1"
+	[[ -z "$node" ]] && return 0
+	[[ "$node" == "12345" ]] && return 0
+	return 1
+}
+
+is_configured_node() {
+	local node="$1"
+	! is_unconfigured_node "$node" && validate_node_number "$node"
+}
+
+write_node_number() {
+	local node="$1"
+	local conf="/etc/internet-monitor.conf"
+
+	if grep -q '^NODE_NUMBER=' "$conf" 2>/dev/null; then
+		sed -i "s/^NODE_NUMBER=.*/NODE_NUMBER=${node}/" "$conf"
+	else
+		echo "NODE_NUMBER=${node}" >> "$conf"
+	fi
+}
+
 case "$1" in
-    configure)
-        # Set ownership on installed sound files
-        SOUND_DIR="/usr/share/asterisk/sounds/custom"
-        if getent passwd asterisk >/dev/null 2>&1; then
-            [ -f "${SOUND_DIR}/internet-yes.ulaw" ] && chown asterisk:asterisk "${SOUND_DIR}/internet-yes.ulaw" 2>/dev/null || true
-            [ -f "${SOUND_DIR}/internet-no.ulaw" ] && chown asterisk:asterisk "${SOUND_DIR}/internet-no.ulaw" 2>/dev/null || true
-        fi
-        
-        # Reload systemd daemon
-        if command -v systemctl >/dev/null 2>&1; then
-            systemctl daemon-reload || true
-        fi
-        
-        # Install default configuration if it doesn't exist
-        if [ -f /etc/internet-monitor.conf.dpkg-new ]; then
-            if [ ! -f /etc/internet-monitor.conf ]; then
-                mv /etc/internet-monitor.conf.dpkg-new /etc/internet-monitor.conf
-                echo "Created default configuration file at /etc/internet-monitor.conf"
-            else
-                rm -f /etc/internet-monitor.conf.dpkg-new
-            fi
-        fi
-        
-        # Check if configuration needs to be set up
-        if [ ! -f /etc/internet-monitor.conf ] || ! grep -q "^NODE_NUMBER=" /etc/internet-monitor.conf 2>/dev/null || grep -q "^NODE_NUMBER=12345$" /etc/internet-monitor.conf 2>/dev/null; then
-            echo ""
-            echo "=========================================="
-            echo "Internet Monitor Configuration Required"
-            echo "=========================================="
-            echo ""
-            echo "Please edit /etc/internet-monitor.conf and set your NODE_NUMBER"
-            echo "Then start the service with:"
-            echo "  sudo systemctl start internet-monitor"
-            echo "  sudo systemctl enable internet-monitor"
-            echo ""
-        fi
-        ;;
-    
-    abort-upgrade|abort-remove|abort-deconfigure)
-        ;;
-    
-    *)
-        echo "postinst called with unknown argument \`$1'" >&2
-        exit 1
-        ;;
+	configure)
+		# Set ownership on installed sound files
+		SOUND_DIR="/usr/share/asterisk/sounds/custom"
+		if getent passwd asterisk >/dev/null 2>&1; then
+			[ -f "${SOUND_DIR}/internet-yes.ulaw" ] && chown asterisk:asterisk "${SOUND_DIR}/internet-yes.ulaw" 2>/dev/null || true
+			[ -f "${SOUND_DIR}/internet-no.ulaw" ] && chown asterisk:asterisk "${SOUND_DIR}/internet-no.ulaw" 2>/dev/null || true
+		fi
+
+		# Reload systemd daemon
+		if command -v systemctl >/dev/null 2>&1; then
+			systemctl daemon-reload || true
+		fi
+
+		# Install default configuration if it doesn't exist
+		if [ -f /etc/internet-monitor.conf.dpkg-new ]; then
+			if [ ! -f /etc/internet-monitor.conf ]; then
+				mv /etc/internet-monitor.conf.dpkg-new /etc/internet-monitor.conf
+			else
+				rm -f /etc/internet-monitor.conf.dpkg-new
+			fi
+		fi
+
+		if [ ! -f /etc/internet-monitor.conf ]; then
+			echo "ERROR: /etc/internet-monitor.conf is missing." >&2
+			exit 1
+		fi
+
+		CONFIGURED_NODE=""
+		if grep -q '^NODE_NUMBER=' /etc/internet-monitor.conf 2>/dev/null; then
+			CONFIGURED_NODE=$(grep '^NODE_NUMBER=' /etc/internet-monitor.conf | cut -d= -f2 | tr -d ' "')
+		fi
+
+		ACTIVE_NODE=""
+		if is_configured_node "$CONFIGURED_NODE"; then
+			ACTIVE_NODE="$CONFIGURED_NODE"
+			db_set internet-monitor/node-number "$CONFIGURED_NODE" || true
+		else
+			db_get internet-monitor/node-number NODE_NUMBER || NODE_NUMBER=""
+			NODE_NUMBER=$(printf '%s' "$NODE_NUMBER" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
+			if ! validate_node_number "$NODE_NUMBER"; then
+				echo "ERROR: NODE_NUMBER is not configured." >&2
+				echo "Run: sudo dpkg-reconfigure internet-monitor" >&2
+				exit 1
+			fi
+
+			write_node_number "$NODE_NUMBER"
+			ACTIVE_NODE="$NODE_NUMBER"
+			echo "Configured NODE_NUMBER=${NODE_NUMBER} in /etc/internet-monitor.conf"
+		fi
+
+		echo ""
+		echo "Internet Monitor is configured for node ${ACTIVE_NODE}."
+		echo "Start and enable the service with:"
+		echo "  sudo systemctl enable --now internet-monitor"
+		echo ""
+		;;
+
+	abort-upgrade|abort-remove|abort-deconfigure)
+		;;
+
+	*)
+		echo "postinst called with unknown argument \`$1'" >&2
+		exit 1
+		;;
 esac
 
 # dh_installdeb will replace this with shell code automatically

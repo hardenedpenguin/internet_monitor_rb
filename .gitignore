@@ -22,6 +22,7 @@ debian/internet-monitor/
 debian/internet-monitor.substvars
 debian/*.debhelper.log
 debian/*.substvars
+debian/*.debhelper
 
 # IDE
 .idea/

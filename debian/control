@@ -11,7 +11,7 @@ Rules-Requires-Root: no
 
 Package: internet-monitor
 Architecture: all
-Depends: ${misc:Depends}, ${ruby:Depends}, ruby (>= 2.7), iputils-ping, systemd, asl3-asterisk
+Depends: ${misc:Depends}, ${ruby:Depends}, debconf (>= 0.5) | debconf-2.0, ruby (>= 2.7), iputils-ping, systemd, asl3-asterisk
 Recommends: network-manager
 Description: Internet connectivity monitor for AllStarLink ASL3+ nodes
  A robust internet connectivity monitoring service designed specifically

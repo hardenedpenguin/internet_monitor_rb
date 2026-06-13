@@ -1,3 +1,11 @@
+internet-monitor (1.0.3-1) unstable; urgency=medium
+
+  * Prompt for NODE_NUMBER during apt install via debconf; fail configure if unset
+  * Require NODE_NUMBER in the monitor at runtime (no default placeholder)
+  * Purge debconf answers on package purge
+
+ -- Jory A. Pratt, W5GLE <geekypenguin@gmail.com>  Wed, 23 Apr 2026 12:00:00 +0000
+
 internet-monitor (1.0.2-1) unstable; urgency=medium
 
   * Further hardening: ping uses '--' before targets; validate PING_HOSTS tokens

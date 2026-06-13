@@ -1,0 +1,75 @@
+#!/bin/sh
+# debconf config script for internet-monitor
+
+set -e
+
+. /usr/share/debconf/confmodule
+
+validate_node_number() {
+	node="$1"
+	[ -n "$node" ] || return 1
+	echo "$node" | grep -Eq '^[0-9]+$' || return 1
+	[ "$node" -ge 1 ] 2>/dev/null || return 1
+	[ "$node" -le 999999999 ] 2>/dev/null || return 1
+	return 0
+}
+
+is_unconfigured_node() {
+	node="$1"
+	[ -z "$node" ] && return 0
+	[ "$node" = "12345" ] && return 0
+	return 1
+}
+
+read_configured_node() {
+	if [ ! -f /etc/internet-monitor.conf ]; then
+		return 1
+	fi
+	node=$(grep '^NODE_NUMBER=' /etc/internet-monitor.conf 2>/dev/null | cut -d= -f2 | tr -d ' "' || true)
+	is_unconfigured_node "$node" && return 1
+	validate_node_number "$node"
+}
+
+case "$1" in
+	configure)
+		if read_configured_node; then
+			db_set internet-monitor/node-number "$node"
+			exit 0
+		fi
+
+		if [ "$DEBIAN_FRONTEND" = "noninteractive" ]; then
+			db_get internet-monitor/node-number NODE
+			NODE=$(printf '%s' "$NODE" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+			if validate_node_number "$NODE" && ! is_unconfigured_node "$NODE"; then
+				db_set internet-monitor/node-number "$NODE"
+				exit 0
+			fi
+			echo "internet-monitor: preseed internet-monitor/node-number for noninteractive installs." >&2
+			exit 1
+		fi
+
+		while true; do
+			db_input high internet-monitor/node-number || true
+			if ! db_go; then
+				echo "internet-monitor: configuration cancelled; NODE_NUMBER is required." >&2
+				exit 1
+			fi
+
+			db_get internet-monitor/node-number NODE
+			NODE=$(printf '%s' "$NODE" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+			if validate_node_number "$NODE"; then
+				db_set internet-monitor/node-number "$NODE"
+				exit 0
+			fi
+
+			db_input high internet-monitor/node-number/error || true
+			db_go || true
+			db_fset internet-monitor/node-number seen false
+		done
+		;;
+
+	*)
+		;;
+esac
+
+exit 0

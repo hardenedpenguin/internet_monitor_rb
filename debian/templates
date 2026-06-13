@@ -1,0 +1,13 @@
+Template: internet-monitor/node-number
+Type: string
+Description: AllStarLink node number:
+ Enter the AllStarLink node number for this Internet Monitor install.
+ .
+ This value is required. The monitor uses it for local audio announcements
+ when connectivity changes. It must be a positive integer (1-999999999).
+
+Template: internet-monitor/node-number/error
+Type: error
+Description: Invalid node number
+ The node number must be a positive integer from 1 to 999999999.
+ Please try again.

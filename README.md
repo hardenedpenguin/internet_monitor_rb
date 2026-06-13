@@ -19,22 +19,29 @@ Download and install the latest release:
 
 ```bash
 cd /tmp
-wget https://github.com/hardenedpenguin/internet_monitor_rb/releases/download/v1.0.2/internet-monitor_1.0.2-1_all.deb
-sudo dpkg -i internet-monitor_1.0.2-1_all.deb
+wget https://github.com/hardenedpenguin/internet_monitor_rb/releases/download/v1.0.3/internet-monitor_1.0.3-1_all.deb
+sudo dpkg -i internet-monitor_1.0.3-1_all.deb
 sudo apt-get install -f  # Fix any dependency issues
 ```
 
-Prebuilt `.deb` files are attached to [GitHub Releases](https://github.com/hardenedpenguin/internet_monitor_rb/releases). Pushing a git tag named `v*` (for example `v1.0.2`) builds the package from `debian/changelog` and publishes that tag as a release with the binary attached.
+Prebuilt `.deb` files are attached to [GitHub Releases](https://github.com/hardenedpenguin/internet_monitor_rb/releases). Pushing a git tag named `v*` (for example `v1.0.3`) builds the package from `debian/changelog` and publishes that tag as a release with the binary attached.
 
 ## Configuration
 
-Edit `/etc/internet-monitor.conf` and set your `NODE_NUMBER`:
+On install, `apt` prompts for your **AllStarLink node number** (required). You can change it later with:
 
 ```bash
-sudo nano /etc/internet-monitor.conf
+sudo dpkg-reconfigure internet-monitor
 ```
 
-Start and enable the service:
+For noninteractive installs, preseed the value first:
+
+```bash
+echo "internet-monitor internet-monitor/node-number string YOUR_NODE" | sudo debconf-set-selections
+sudo apt-get install -y internet-monitor
+```
+
+The config file is `/etc/internet-monitor.conf`. After install, start and enable the service:
 
 ```bash
 sudo systemctl start internet-monitor
@@ -43,7 +50,7 @@ sudo systemctl enable internet-monitor
 
 ## Configuration Options
 
-- `NODE_NUMBER`: Your AllStarLink node number (required)
+- `NODE_NUMBER`: Your AllStarLink node number (required; set during `apt install` or `dpkg-reconfigure`)
 - `CHECK_INTERVAL`: How often to check connectivity in seconds (default: 180, minimum: 30)
 - `PING_HOSTS`: Space-separated list of servers to ping (default: "1.1.1.1 8.8.8.8 208.67.222.222"). Each target must be a hostname or address using only letters, digits, `.`, `:`, `_`, `%`, `+`, or `-`, and must not begin with `-`.
 - `SOUND_DIR`: Directory containing audio files (default: "/usr/share/asterisk/sounds/custom")

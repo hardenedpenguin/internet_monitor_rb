@@ -4,6 +4,13 @@
 set -e
 
 case "$1" in
+    purge)
+        if [ -f /usr/share/debconf/confmodule ]; then
+            . /usr/share/debconf/confmodule
+            db_purge || true
+        fi
+        ;;&
+
     purge|remove)
         # Reload systemd daemon if service file was removed
         if command -v systemctl >/dev/null 2>&1; then
