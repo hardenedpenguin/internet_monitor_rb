@@ -33,3 +33,9 @@ jobs:
         with:
           files: internet-monitor_*_all.deb
           generate_release_notes: true
+
+  publish-apt-repo:
+    needs: publish
+    uses: hardenedpenguin/hardenedpenguin-apt/.github/workflows/dispatch-apt-publish.yml@main
+    secrets:
+      APT_REPO_DISPATCH_TOKEN: ${{ secrets.APT_REPO_DISPATCH_TOKEN }}
