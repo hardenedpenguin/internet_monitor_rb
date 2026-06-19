@@ -19,12 +19,12 @@ Download and install the latest release:
 
 ```bash
 cd /tmp
-wget https://github.com/hardenedpenguin/internet_monitor_rb/releases/download/v1.0.5.3/internet-monitor_1.0.5-3_all.deb
-sudo dpkg -i internet-monitor_1.0.5-3_all.deb
+wget https://github.com/hardenedpenguin/internet_monitor_rb/releases/download/v1.0.5.4/internet-monitor_1.0.5-4_all.deb
+sudo dpkg -i internet-monitor_1.0.5-4_all.deb
 sudo apt-get install -f  # Fix any dependency issues
 ```
 
-Prebuilt `.deb` files are attached to [GitHub Releases](https://github.com/hardenedpenguin/internet_monitor_rb/releases). Pushing a git tag named `v*` (for example `v1.0.5.3`) builds the package from `debian/changelog` and publishes that tag as a release with the binary attached.
+Prebuilt `.deb` files are attached to [GitHub Releases](https://github.com/hardenedpenguin/internet_monitor_rb/releases). Pushing a git tag named `v*` (for example `v1.0.5.4`) builds the package from `debian/changelog` and publishes that tag as a release with the binary attached.
 
 ## Configuration
 

@@ -4,3 +4,4 @@ internet-monitor binary: bogus-mail-host-in-debian-changelog
 # Script-only monitor; no man page required.
 internet-monitor: no-manual-page
 internet-monitor: script-with-language-extension
+internet-monitor: debian-changelog-line-too-long
