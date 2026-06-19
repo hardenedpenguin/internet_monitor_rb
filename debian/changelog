@@ -1,10 +1,16 @@
-internet-monitor (1.0.5-2) unstable; urgency=medium
+internet-monitor (1.0.5-3) stable; urgency=medium
+
+  * Fix CI lintian failure: use stable distribution in changelog (Ubuntu runners)
+
+ -- Jory A. Pratt (W5GLE) <geekypenguin@gmail.com>  Fri, 12 Jun 2026 22:00:00 +0000
+
+internet-monitor (1.0.5-2) stable; urgency=medium
 
   * Repo cleanup: single systemd unit under debian/, Makefile, fixed copyright
 
  -- Jory A. Pratt (W5GLE) <geekypenguin@gmail.com>  Fri, 12 Jun 2026 21:00:00 +0000
 
-internet-monitor (1.0.5-1) unstable; urgency=medium
+internet-monitor (1.0.5-1) stable; urgency=medium
 
   * Do not play reconnect audio on service startup when already online
   * Check Asterisk playback exit status; stop using which for command lookup
@@ -18,13 +24,13 @@ internet-monitor (1.0.5-1) unstable; urgency=medium
 
  -- Jory A. Pratt (W5GLE) <geekypenguin@gmail.com>  Fri, 12 Jun 2026 20:00:00 +0000
 
-internet-monitor (1.0.4-1) unstable; urgency=medium
+internet-monitor (1.0.4-1) stable; urgency=medium
 
   * Fix debconf db_get usage (result is in $RET); fixes postinst exit status 20
 
  -- Jory A. Pratt (W5GLE) <geekypenguin@gmail.com>  Thu, 12 Jun 2026 12:00:00 +0000
 
-internet-monitor (1.0.3-1) unstable; urgency=medium
+internet-monitor (1.0.3-1) stable; urgency=medium
 
   * Prompt for NODE_NUMBER during apt install via debconf; fail configure if unset
   * Require NODE_NUMBER in the monitor at runtime (no default placeholder)
@@ -32,7 +38,7 @@ internet-monitor (1.0.3-1) unstable; urgency=medium
 
  -- Jory A. Pratt (W5GLE) <geekypenguin@gmail.com>  Wed, 23 Apr 2026 12:00:00 +0000
 
-internet-monitor (1.0.2-1) unstable; urgency=medium
+internet-monitor (1.0.2-1) stable; urgency=medium
 
   * Further hardening: ping uses '--' before targets; validate PING_HOSTS tokens
   * Run ip(8) without a shell; ensure sound files stay under SOUND_DIR
@@ -40,7 +46,7 @@ internet-monitor (1.0.2-1) unstable; urgency=medium
 
  -- Jory A. Pratt (W5GLE) <geekypenguin@gmail.com>  Wed, 23 Apr 2026 00:00:00 +0000
 
-internet-monitor (1.0.1-1) unstable; urgency=medium
+internet-monitor (1.0.1-1) stable; urgency=medium
 
   * Security and code quality improvements
   * Fix command injection vulnerabilities by using safe argument arrays
@@ -56,7 +62,7 @@ internet-monitor (1.0.1-1) unstable; urgency=medium
 
  -- Jory A. Pratt (W5GLE) <geekypenguin@gmail.com>  Thu, 23 Jan 2026 12:33:54 +0000
 
-internet-monitor (1.0.0-1) unstable; urgency=medium
+internet-monitor (1.0.0-1) stable; urgency=medium
 
   * Initial Debian package release
   * Ruby implementation of Internet Monitor for AllStarLink ASL3+

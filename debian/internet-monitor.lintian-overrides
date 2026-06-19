@@ -1,2 +1,6 @@
 # Gmail MX checks fail in some CI/sandbox environments; address is valid.
 internet-monitor binary: bogus-mail-host-in-debian-changelog
+
+# Script-only monitor; no man page required.
+internet-monitor: no-manual-page
+internet-monitor: script-with-language-extension
