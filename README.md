@@ -19,12 +19,12 @@ Download and install the latest release:
 
 ```bash
 cd /tmp
-wget https://github.com/hardenedpenguin/internet_monitor_rb/releases/download/v1.0.4/internet-monitor_1.0.4-1_all.deb
-sudo dpkg -i internet-monitor_1.0.4-1_all.deb
+wget https://github.com/hardenedpenguin/internet_monitor_rb/releases/download/v1.0.5/internet-monitor_1.0.5-1_all.deb
+sudo dpkg -i internet-monitor_1.0.5-1_all.deb
 sudo apt-get install -f  # Fix any dependency issues
 ```
 
-Prebuilt `.deb` files are attached to [GitHub Releases](https://github.com/hardenedpenguin/internet_monitor_rb/releases). Pushing a git tag named `v*` (for example `v1.0.4`) builds the package from `debian/changelog` and publishes that tag as a release with the binary attached.
+Prebuilt `.deb` files are attached to [GitHub Releases](https://github.com/hardenedpenguin/internet_monitor_rb/releases). Pushing a git tag named `v*` (for example `v1.0.5`) builds the package from `debian/changelog` and publishes that tag as a release with the binary attached.
 
 ## Configuration
 
@@ -41,11 +41,11 @@ echo "internet-monitor internet-monitor/node-number string YOUR_NODE" | sudo deb
 sudo apt-get install -y internet-monitor
 ```
 
-The config file is `/etc/internet-monitor.conf`. After install, start and enable the service:
+The config file is `/etc/internet-monitor.conf`. After a successful install the service is enabled and started automatically. To manage it manually:
 
 ```bash
-sudo systemctl start internet-monitor
-sudo systemctl enable internet-monitor
+sudo systemctl status internet-monitor
+sudo systemctl restart internet-monitor
 ```
 
 ## Configuration Options
@@ -53,6 +53,7 @@ sudo systemctl enable internet-monitor
 - `NODE_NUMBER`: Your AllStarLink node number (required; set during `apt install` or `dpkg-reconfigure`)
 - `CHECK_INTERVAL`: How often to check connectivity in seconds (default: 180, minimum: 30)
 - `PING_HOSTS`: Space-separated list of servers to ping (default: "1.1.1.1 8.8.8.8 208.67.222.222"). Each target must be a hostname or address using only letters, digits, `.`, `:`, `_`, `%`, `+`, or `-`, and must not begin with `-`.
+- `DNS_TEST_HOST`: Hostname used for DNS resolution checks (default: "google.com"). Uses the same character rules as `PING_HOSTS`.
 - `SOUND_DIR`: Directory containing audio files (default: "/usr/share/asterisk/sounds/custom")
 - `LOG_FILE`: Path to log file (default: "/var/log/internet-monitor.log")
 - `ASTERISK_CLI`: Path to Asterisk CLI executable (default: "/usr/sbin/asterisk")

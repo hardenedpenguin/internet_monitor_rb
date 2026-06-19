@@ -22,12 +22,15 @@ is_unconfigured_node() {
 }
 
 read_configured_node() {
-	if [ ! -f /etc/internet-monitor.conf ]; then
-		return 1
-	fi
-	node=$(grep '^NODE_NUMBER=' /etc/internet-monitor.conf 2>/dev/null | cut -d= -f2 | tr -d ' "' || true)
-	is_unconfigured_node "$node" && return 1
-	validate_node_number "$node"
+	for conf in /etc/internet-monitor.conf /etc/internet-monitor.conf.dpkg-new; do
+		[ -f "$conf" ] || continue
+		node=$(grep -m1 '^NODE_NUMBER=' "$conf" 2>/dev/null | cut -d= -f2 | tr -d ' "' || true)
+		is_unconfigured_node "$node" && continue
+		if validate_node_number "$node"; then
+			return 0
+		fi
+	done
+	return 1
 }
 
 case "$1" in

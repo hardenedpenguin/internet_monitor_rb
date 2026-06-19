@@ -1,0 +1,2 @@
+# Gmail MX checks fail in some CI/sandbox environments; address is valid.
+internet-monitor binary: bogus-mail-host-in-debian-changelog

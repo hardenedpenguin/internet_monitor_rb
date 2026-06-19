@@ -8,9 +8,6 @@ export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 	dh $@
 
 override_dh_auto_install:
-	# Install systemd service file
-	install -d debian/internet-monitor/etc/systemd/system
-	install -m 644 internet-monitor.service debian/internet-monitor/etc/systemd/system/
 	# Install Ruby script
 	install -d debian/internet-monitor/usr/sbin
 	install -m 755 internet_monitor.rb debian/internet-monitor/usr/sbin/internet_monitor.rb

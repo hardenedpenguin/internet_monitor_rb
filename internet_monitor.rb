@@ -30,6 +30,7 @@ class Config
     'SOUND_DIR' => [:sound_dir, ->(v) { v }],
     'LOG_FILE' => [:log_file, ->(v) { v }],
     'ASTERISK_CLI' => [:asterisk_cli, ->(v) { v }],
+    'DNS_TEST_HOST' => [:dns_test_host, ->(v) { v }],
     'MAX_LOG_SIZE' => [:max_log_size, ->(v) { v.to_i }],
     'LOG_RETENTION' => [:log_retention, ->(v) { v.to_i }]
   }.freeze
@@ -46,7 +47,7 @@ class Config
   end
 
   attr_accessor :node_number, :check_interval, :ping_hosts, :sound_dir,
-                :log_file, :asterisk_cli, :max_log_size, :log_retention
+                :log_file, :asterisk_cli, :dns_test_host, :max_log_size, :log_retention
 
   def initialize
     set_defaults
@@ -63,6 +64,7 @@ class Config
     @sound_dir = '/usr/share/asterisk/sounds/custom'
     @log_file = '/var/log/internet-monitor.log'
     @asterisk_cli = '/usr/sbin/asterisk'
+    @dns_test_host = 'google.com'
     @max_log_size = 10_485_760
     @log_retention = 5
   end
@@ -104,6 +106,9 @@ class Config
     raise "SOUND_DIR cannot be empty" if @sound_dir.nil? || @sound_dir.strip.empty?
     raise "LOG_FILE cannot be empty" if @log_file.nil? || @log_file.strip.empty?
     raise "ASTERISK_CLI cannot be empty" if @asterisk_cli.nil? || @asterisk_cli.strip.empty?
+
+    raise "DNS_TEST_HOST cannot be empty" if @dns_test_host.nil? || @dns_test_host.strip.empty?
+    raise "Invalid DNS_TEST_HOST: #{@dns_test_host.inspect}" unless self.class.valid_ping_target?(@dns_test_host)
 
     # Validate log settings
     raise "MAX_LOG_SIZE must be positive" unless @max_log_size.is_a?(Integer) && @max_log_size > 0
@@ -199,10 +204,13 @@ class AudioPlayer
       # Asterisk CLI requires the command as a single string argument
       # Since we've validated inputs, it's safe to construct the command string
       asterisk_cmd = "rpt localplay #{safe_node} #{safe_filename}"
-      # Use safe command execution - asterisk CLI with validated arguments
-      system(@asterisk_cli, '-rx', asterisk_cmd, out: File::NULL, err: File::NULL)
-      @logger.info("Played audio: #{filename}")
-      true
+      if system(@asterisk_cli, '-rx', asterisk_cmd, out: File::NULL, err: File::NULL)
+        @logger.info("Played audio: #{filename}")
+        true
+      else
+        @logger.warn("Asterisk playback failed for: #{filename}")
+        false
+      end
     else
       @logger.warn('Asterisk CLI not available, skipping audio playback')
       false
@@ -212,11 +220,10 @@ end
 
 # Connectivity tester class for ping and DNS testing
 class ConnectivityTester
-  DNS_TEST_HOST = 'google.com'.freeze
-
   def initialize(config, logger)
     @logger = logger
     @ping_hosts = config.ping_hosts
+    @dns_test_host = config.dns_test_host
   end
 
   def has_internet?
@@ -241,11 +248,11 @@ class ConnectivityTester
   # Test DNS resolution using Ruby's Resolv library (more secure than shell commands)
   def dns_test
     begin
-      Resolv.getaddress(DNS_TEST_HOST)
-      @logger.debug("DNS resolution successful for #{DNS_TEST_HOST}")
+      Resolv.getaddress(@dns_test_host)
+      @logger.debug("DNS resolution successful for #{@dns_test_host}")
       true
     rescue Resolv::ResolvError => e
-      @logger.warn("DNS resolution failed for #{DNS_TEST_HOST}: #{e.message}")
+      @logger.warn("DNS resolution failed for #{@dns_test_host}: #{e.message}")
       false
     rescue StandardError => e
       @logger.error("DNS test error: #{e.message}")
@@ -378,14 +385,27 @@ class InternetMonitor
     @audio_player = AudioPlayer.new(@config, @logger)
     @connectivity_tester = ConnectivityTester.new(@config, @logger)
     @network_manager = NetworkManager.new(@logger)
-    @network_ok = false
+    @network_ok = nil # nil = unknown (startup); true/false after first check
+  end
+
+  def command_available?(cmd)
+    ENV.fetch('PATH', '').split(':').any? do |dir|
+      path = File.join(dir, cmd)
+      File.file?(path) && File.executable?(path)
+    end
+  end
+
+  def interruptible_sleep(seconds)
+    seconds.times do
+      break unless @signal_handler.running
+
+      sleep 1
+    end
   end
 
   # Validate that required system commands are available
   def validate_commands
-    missing = REQUIRED_COMMANDS.reject do |cmd|
-      system('which', cmd, out: File::NULL, err: File::NULL)
-    end
+    missing = REQUIRED_COMMANDS.reject { |cmd| command_available?(cmd) }
     raise "Missing required commands: #{missing.join(', ')}" unless missing.empty?
   end
 
@@ -397,32 +417,28 @@ class InternetMonitor
     @logger.info("Internet monitor started for node #{@config.node_number}")
     @logger.info("Check interval: #{@config.check_interval} seconds")
     @logger.info("Ping hosts: #{@config.ping_hosts.join(' ')}")
+    @logger.info("DNS test host: #{@config.dns_test_host}")
     @logger.debug("Log file: #{@config.log_file}")
 
     # Main monitoring loop - check connectivity at configured intervals
     while @signal_handler.running
       if @connectivity_tester.has_internet?
-        # Internet is available
-        unless @network_ok
-          # State transition: offline -> online
+        if @network_ok == false
           @audio_player.play('internet-yes')
           @logger.info('Internet reconnected. AllStarLink node should be back on the network!')
         end
         @network_ok = true
       else
-        # Internet is not available
-        if @network_ok
-          # State transition: online -> offline
+        if @network_ok == true
           @audio_player.play('internet-no')
           @logger.warn('Internet lost. AllStarLink node is offline!')
         end
         @network_ok = false
-        # Attempt to reconnect network
         @network_manager.try_reconnect
       end
 
       break unless @signal_handler.running
-      sleep(@config.check_interval)
+      interruptible_sleep(@config.check_interval)
     end
 
     @logger.info('Internet monitor stopped gracefully')

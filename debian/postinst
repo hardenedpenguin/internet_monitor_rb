@@ -67,7 +67,7 @@ case "$1" in
 
 		CONFIGURED_NODE=""
 		if grep -q '^NODE_NUMBER=' /etc/internet-monitor.conf 2>/dev/null; then
-			CONFIGURED_NODE=$(grep '^NODE_NUMBER=' /etc/internet-monitor.conf | cut -d= -f2 | tr -d ' "')
+			CONFIGURED_NODE=$(grep -m1 '^NODE_NUMBER=' /etc/internet-monitor.conf | cut -d= -f2 | tr -d ' "')
 		fi
 
 		ACTIVE_NODE=""
@@ -92,8 +92,8 @@ case "$1" in
 
 		echo ""
 		echo "Internet Monitor is configured for node ${ACTIVE_NODE}."
-		echo "Start and enable the service with:"
-		echo "  sudo systemctl enable --now internet-monitor"
+		echo "The internet-monitor service is enabled and will start automatically."
+		echo "Check status with: sudo systemctl status internet-monitor"
 		echo ""
 		;;
 

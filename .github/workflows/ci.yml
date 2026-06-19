@@ -19,10 +19,13 @@ jobs:
       - name: Install Debian build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends debhelper fakeroot ruby build-essential
+          sudo apt-get install -y --no-install-recommends debhelper fakeroot ruby build-essential lintian
 
       - name: Build binary package
         run: fakeroot dpkg-buildpackage -b -us -uc
+
+      - name: Lintian
+        run: lintian --fail-on error ../*.changes
 
       - name: Collect .deb for artifact
         run: |
