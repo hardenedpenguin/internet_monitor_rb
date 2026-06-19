@@ -93,3 +93,12 @@ This application has been hardened against command injection vulnerabilities. Al
 ## License
 
 This project is licensed under the GNU General Public License v3.0.
+
+## Development
+
+```bash
+make syntax   # Ruby syntax check
+make build    # Build the .deb (output in parent directory)
+make lint     # Build and run lintian
+make clean    # Remove build artifacts
+```

@@ -13,19 +13,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Ruby syntax check
-        run: ruby -c internet_monitor.rb
-
       - name: Install Debian build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends debhelper fakeroot ruby build-essential lintian
 
-      - name: Build binary package
-        run: fakeroot dpkg-buildpackage -b -us -uc
+      - name: Syntax check
+        run: make syntax
 
-      - name: Lintian
-        run: lintian --fail-on error ../*.changes
+      - name: Build and lint package
+        run: make lint
 
       - name: Collect .deb for artifact
         run: |

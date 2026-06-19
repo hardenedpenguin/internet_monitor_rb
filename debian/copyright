@@ -1,13 +1,13 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: internet-monitor
-Source: https://github.com/KD5FMU/Internet-Monitor-ASL3
+Source: https://github.com/hardenedpenguin/internet_monitor_rb
 
 Files: *
-Copyright: 2026 Jory A. Pratt, W5GLE <geekypenguin@gmail.com>
+Copyright: 2026 Jory A. Pratt (W5GLE) <geekypenguin@gmail.com>
 License: GPL-3.0+
 
 Files: debian/*
-Copyright: 2026 Jory A. Pratt, W5GLE <geekypenguin@gmail.com>
+Copyright: 2026 Jory A. Pratt (W5GLE) <geekypenguin@gmail.com>
 License: GPL-3.0+
 
 License: GPL-3.0+
