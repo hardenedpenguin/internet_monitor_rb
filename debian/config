@@ -3,7 +3,13 @@
 
 set -e
 
+# Optional node number from the apt/dpkg environment
+# (DEBIAN_FRONTEND=noninteractive NODE_NUMBER=546050 apt install internet-monitor).
+ENV_NODE="${NODE_NUMBER-}"
+
 . /usr/share/debconf/confmodule
+
+MAX_ATTEMPTS=3
 
 validate_node_number() {
 	node="$1"
@@ -21,12 +27,19 @@ is_unconfigured_node() {
 	return 1
 }
 
+is_configured_node() {
+	! is_unconfigured_node "$1" && validate_node_number "$1"
+}
+
+trim() {
+	printf '%s' "$1" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
+}
+
 read_configured_node() {
 	for conf in /etc/internet-monitor.conf /etc/internet-monitor.conf.dpkg-new; do
 		[ -f "$conf" ] || continue
 		node=$(grep -m1 '^NODE_NUMBER=' "$conf" 2>/dev/null | cut -d= -f2 | tr -d ' "' || true)
-		is_unconfigured_node "$node" && continue
-		if validate_node_number "$node"; then
+		if is_configured_node "$node"; then
 			return 0
 		fi
 	done
@@ -34,43 +47,58 @@ read_configured_node() {
 }
 
 case "$1" in
-	configure)
-		if read_configured_node; then
-			db_set internet-monitor/node-number "$node"
+	configure|reconfigure)
+		ENV_NODE=$(trim "$ENV_NODE")
+		if is_configured_node "$ENV_NODE"; then
+			db_set internet-monitor/node-number "$ENV_NODE"
 			exit 0
 		fi
 
-		if [ "$DEBIAN_FRONTEND" = "noninteractive" ]; then
-			db_get internet-monitor/node-number || true
-			NODE="$RET"
-			NODE=$(printf '%s' "$NODE" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-			if validate_node_number "$NODE" && ! is_unconfigured_node "$NODE"; then
-				db_set internet-monitor/node-number "$NODE"
-				exit 0
-			fi
-			echo "internet-monitor: preseed internet-monitor/node-number for noninteractive installs." >&2
-			exit 1
+		if read_configured_node; then
+			db_set internet-monitor/node-number "$node"
+			[ "$1" = "configure" ] && exit 0
 		fi
 
-		while true; do
-			db_input high internet-monitor/node-number || true
+		# Answered during apt's preconfigure pass, or preseeded.
+		if [ "$1" = "configure" ]; then
+			db_get internet-monitor/node-number || RET=""
+			if is_configured_node "$(trim "$RET")"; then
+				exit 0
+			fi
+		fi
+
+		db_fset internet-monitor/node-number seen false || true
+		attempt=0
+		while [ "$attempt" -lt "$MAX_ATTEMPTS" ]; do
+			attempt=$((attempt + 1))
+
+			rc=0
+			db_input high internet-monitor/node-number || rc=$?
+			if [ "$rc" -eq 30 ]; then
+				echo "internet-monitor: cannot prompt for NODE_NUMBER (noninteractive frontend or no terminal)." >&2
+				echo "internet-monitor: install with NODE_NUMBER=<node> in the environment, or preseed internet-monitor/node-number." >&2
+				exit 1
+			fi
 			if ! db_go; then
 				echo "internet-monitor: configuration cancelled; NODE_NUMBER is required." >&2
 				exit 1
 			fi
 
-			db_get internet-monitor/node-number || true
-			NODE="$RET"
-			NODE=$(printf '%s' "$NODE" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-			if validate_node_number "$NODE"; then
+			db_get internet-monitor/node-number || RET=""
+			NODE=$(trim "$RET")
+			if is_configured_node "$NODE"; then
 				db_set internet-monitor/node-number "$NODE"
 				exit 0
 			fi
 
+			db_fset internet-monitor/node-number/error seen false || true
 			db_input high internet-monitor/node-number/error || true
 			db_go || true
-			db_fset internet-monitor/node-number seen false
+			db_fset internet-monitor/node-number seen false || true
 		done
+
+		echo "internet-monitor: no valid NODE_NUMBER after $MAX_ATTEMPTS attempts." >&2
+		exit 1
 		;;
 
 	*)

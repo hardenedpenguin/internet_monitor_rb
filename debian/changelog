@@ -1,3 +1,12 @@
+internet-monitor (1.0.7-1) stable; urgency=medium
+
+  * Honor NODE_NUMBER from the environment during install so noninteractive
+    installs (asl3_mapp.rb -m) no longer fail in debconf
+  * Make dpkg-reconfigure actually prompt and write the new node number
+  * Stop looping forever when no terminal is available; fail with a hint
+
+ -- Jory A. Pratt (W5GLE) <geekypenguin@gmail.com>  Sun, 18 Oct 2026 11:00:00 -0500
+
 internet-monitor (1.0.6-1) stable; urgency=medium
 
   * Re-read /etc/resolv.conf on every DNS check; the default resolver cached

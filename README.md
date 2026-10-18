@@ -19,12 +19,12 @@ Download and install the latest release:
 
 ```bash
 cd /tmp
-wget https://github.com/hardenedpenguin/internet_monitor_rb/releases/download/v1.0.6/internet-monitor_1.0.6-1_all.deb
-sudo dpkg -i internet-monitor_1.0.6-1_all.deb
+wget https://github.com/hardenedpenguin/internet_monitor_rb/releases/download/v1.0.7/internet-monitor_1.0.7-1_all.deb
+sudo dpkg -i internet-monitor_1.0.7-1_all.deb
 sudo apt-get install -f  # Fix any dependency issues
 ```
 
-Prebuilt `.deb` files are attached to [GitHub Releases](https://github.com/hardenedpenguin/internet_monitor_rb/releases). Pushing a git tag named `v*` (for example `v1.0.6`) builds the package from `debian/changelog` and publishes that tag as a release with the binary attached.
+Prebuilt `.deb` files are attached to [GitHub Releases](https://github.com/hardenedpenguin/internet_monitor_rb/releases). Pushing a git tag named `v*` (for example `v1.0.7`) builds the package from `debian/changelog` and publishes that tag as a release with the binary attached.
 
 ## Configuration
 
@@ -34,7 +34,13 @@ On install, `apt` prompts for your **AllStarLink node number** (required). You c
 sudo dpkg-reconfigure internet-monitor
 ```
 
-For noninteractive installs, preseed the value first:
+For noninteractive installs, pass the node number in the environment:
+
+```bash
+sudo DEBIAN_FRONTEND=noninteractive NODE_NUMBER=YOUR_NODE apt-get install -y internet-monitor
+```
+
+Preseeding works too:
 
 ```bash
 echo "internet-monitor internet-monitor/node-number string YOUR_NODE" | sudo debconf-set-selections

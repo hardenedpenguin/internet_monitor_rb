@@ -70,24 +70,26 @@ case "$1" in
 			CONFIGURED_NODE=$(grep -m1 '^NODE_NUMBER=' /etc/internet-monitor.conf | cut -d= -f2 | tr -d ' "')
 		fi
 
+		# The debconf answer wins: it holds the conf value unless the admin
+		# supplied a new one (NODE_NUMBER env, preseed, or dpkg-reconfigure).
+		db_get internet-monitor/node-number || RET=""
+		NODE_NUMBER=$(printf '%s' "$RET" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
 		ACTIVE_NODE=""
-		if is_configured_node "$CONFIGURED_NODE"; then
+		if is_configured_node "$NODE_NUMBER"; then
+			ACTIVE_NODE="$NODE_NUMBER"
+			if [ "$NODE_NUMBER" != "$CONFIGURED_NODE" ]; then
+				write_node_number "$NODE_NUMBER"
+				echo "Configured NODE_NUMBER=${NODE_NUMBER} in /etc/internet-monitor.conf"
+			fi
+		elif is_configured_node "$CONFIGURED_NODE"; then
 			ACTIVE_NODE="$CONFIGURED_NODE"
 			db_set internet-monitor/node-number "$CONFIGURED_NODE" || true
 		else
-			db_get internet-monitor/node-number || true
-			NODE_NUMBER="$RET"
-			NODE_NUMBER=$(printf '%s' "$NODE_NUMBER" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-
-			if ! validate_node_number "$NODE_NUMBER"; then
-				echo "ERROR: NODE_NUMBER is not configured." >&2
-				echo "Run: sudo dpkg-reconfigure internet-monitor" >&2
-				exit 1
-			fi
-
-			write_node_number "$NODE_NUMBER"
-			ACTIVE_NODE="$NODE_NUMBER"
-			echo "Configured NODE_NUMBER=${NODE_NUMBER} in /etc/internet-monitor.conf"
+			echo "ERROR: NODE_NUMBER is not configured." >&2
+			echo "Run: sudo dpkg-reconfigure internet-monitor" >&2
+			echo "Or:  sudo NODE_NUMBER=<node> apt install internet-monitor" >&2
+			exit 1
 		fi
 
 		echo ""
