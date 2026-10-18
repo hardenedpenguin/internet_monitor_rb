@@ -245,10 +245,15 @@ class ConnectivityTester
     false
   end
 
-  # Test DNS resolution using Ruby's Resolv library (more secure than shell commands)
+  # Test DNS resolution using Ruby's Resolv library (more secure than shell commands).
+  # Use a new resolver per check: the process-wide default caches /etc/resolv.conf
+  # from first use and never sees nameservers added after startup.
   def dns_test
     begin
-      Resolv.getaddress(@dns_test_host)
+      Resolv::DNS.open do |dns|
+        dns.timeouts = 5
+        dns.getaddress(@dns_test_host)
+      end
       @logger.debug("DNS resolution successful for #{@dns_test_host}")
       true
     rescue Resolv::ResolvError => e

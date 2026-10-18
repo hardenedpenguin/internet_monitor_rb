@@ -1,3 +1,11 @@
+internet-monitor (1.0.6-1) stable; urgency=medium
+
+  * Re-read /etc/resolv.conf on every DNS check; the default resolver cached
+    an empty config from boot and caused NetworkManager restart loops
+  * Start after network-online.target and wait up to 60s for a nameserver
+
+ -- Jory A. Pratt (W5GLE) <geekypenguin@gmail.com>  Sun, 18 Oct 2026 10:30:00 -0500
+
 internet-monitor (1.0.5-4) stable; urgency=medium
 
   * Fix CI lintian: suppress bad-distribution-in-changes-file on Ubuntu runners

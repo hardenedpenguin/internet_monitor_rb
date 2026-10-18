@@ -1,12 +1,14 @@
 [Unit]
 Description=AllStarLink Internet Connection Monitor
-After=network.target asterisk.service NetworkManager.service
-Wants=network.target
+After=network-online.target nss-lookup.target asterisk.service NetworkManager.service
+Wants=network-online.target
 ConditionPathExists=/etc/internet-monitor.conf
 
 [Service]
 Type=simple
 ExecStartPre=/bin/grep -q '^NODE_NUMBER=[1-9][0-9]*$' /etc/internet-monitor.conf
+# Give resolv.conf up to 60s to get a nameserver, then start anyway so a real outage is still detected
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 30); do grep -q "^nameserver" /etc/resolv.conf && exit 0; sleep 2; done; exit 0'
 ExecStart=/usr/sbin/internet_monitor.rb
 Restart=on-failure
 RestartSec=10
